@@ -1,9 +1,10 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
+const serverPath = new URL("../dist/index.js", import.meta.url).pathname;
 const transport = new StdioClientTransport({
   command: "node",
-  args: ["/Users/ziahmco/opensource/billionmail-mcp/dist/index.js"],
+  args: [serverPath],
   env: process.env,
 });
 
@@ -19,7 +20,7 @@ const tests: [string, Record<string, any>][] = [
   ["get_version", {}],
   ["list_domains", {}],
   ["get_all_domains", {}],
-  ["refresh_dns_records", { domain: "rako.sh" }],
+  ["refresh_dns_records", { domain: process.env.TEST_DOMAIN || "example.com" }],
   ["list_mailboxes", {}],
   ["get_all_mailboxes", {}],
   ["get_all_emails", {}],
@@ -46,7 +47,7 @@ const tests: [string, Record<string, any>][] = [
   ["list_bcc_rules", {}],
   ["list_mail_forwards", {}],
   ["list_postfix_queue", {}],
-  ["check_domain_blacklist", { domain: "rako.sh" }],
+  ["check_domain_blacklist", { domain: process.env.TEST_DOMAIN || "example.com" }],
 ];
 
 console.log("\n🔧 Testing tool calls via MCP protocol:\n");

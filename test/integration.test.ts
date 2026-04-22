@@ -2,7 +2,7 @@
  * Integration test for billionmail-mcp-server
  * Tests all tool categories against a live BillionMail instance.
  *
- * Usage: BILLIONMAIL_BASE_URL=https://mail.rako.sh BILLIONMAIL_USER=billion BILLIONMAIL_PASSWORD=billion npx tsx test/integration.test.ts
+ * Usage: BILLIONMAIL_BASE_URL=https://mail.example.com BILLIONMAIL_USER=admin BILLIONMAIL_PASSWORD=secret npx tsx test/integration.test.ts
  */
 
 import { BillionMailClient } from "../src/client.js";

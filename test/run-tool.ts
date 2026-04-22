@@ -4,9 +4,10 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 const [toolName, argsJson] = process.argv.slice(2);
 if (!toolName) { console.error("Usage: npx tsx test/run-tool.ts <tool_name> [args_json]"); process.exit(1); }
 
+const serverPath = new URL("../dist/index.js", import.meta.url).pathname;
 const transport = new StdioClientTransport({
   command: "node",
-  args: ["/Users/ziahmco/opensource/billionmail-mcp/dist/index.js"],
+  args: [serverPath],
   env: process.env,
 });
 
