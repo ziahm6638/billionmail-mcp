@@ -115,7 +115,9 @@ export class BillionMailClient {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       }),
-      body: body ? JSON.stringify(body) : undefined,
+      body: body ? JSON.stringify(Object.fromEntries(
+        Object.entries(body).filter(([_, v]) => v !== undefined)
+      )) : undefined,
     });
     return (await res.json()) as BillionMailResponse<T>;
   }

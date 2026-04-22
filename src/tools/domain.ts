@@ -24,7 +24,8 @@ export function registerDomainTools(server: McpServer, client: BillionMailClient
     quota: z.number().optional().default(10485760).describe("Domain quota in KB"),
     rate_limit: z.number().optional().default(12).describe("Emails per second rate limit"),
   }, async (params) => {
-    const res = await client.post("/domains/create", params);
+    const body: Record<string, any> = { ...params, urls: [] };
+    const res = await client.post("/domains/create", body);
     return { content: [{ type: "text", text: JSON.stringify(res, null, 2) }] };
   });
 
