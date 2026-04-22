@@ -1,6 +1,6 @@
 {
   "name": "billionmail-mcp-server",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for BillionMail — manage domains, mailboxes, contacts, campaigns, templates, and more via AI agents",
   "main": "dist/index.js",
   "bin": {
@@ -13,7 +13,14 @@
     "test": "tsx test/integration.test.ts",
     "prepublishOnly": "npm run build"
   },
-  "keywords": ["mcp", "billionmail", "email", "smtp", "mail-server", "ai"],
+  "keywords": [
+    "mcp",
+    "billionmail",
+    "email",
+    "smtp",
+    "mail-server",
+    "ai"
+  ],
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
