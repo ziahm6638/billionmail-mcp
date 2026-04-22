@@ -244,6 +244,66 @@ The binary reads environment variables on startup, authenticates via JWT, and ex
 | `flush_postfix_queue` | Force send queued mail |
 | `delete_deferred_queue` | Clear stuck mail |
 
+## Remote / Hosted Usage
+
+The server uses stdio transport by default, which means it runs locally alongside your MCP client. If you want to run it on a remote machine (e.g. on the same server as BillionMail) and connect to it from elsewhere, you have two options.
+
+### Option 1: supergateway (expose as SSE/HTTP)
+
+Use [supergateway](https://github.com/nicholasgriffintn/supergateway) to wrap the stdio server as an SSE or streamable HTTP endpoint:
+
+```bash
+# Install on the remote server
+npm install -g billionmail-mcp-server supergateway
+
+# Set env vars
+export BILLIONMAIL_BASE_URL=https://mail.example.com
+export BILLIONMAIL_USER=admin
+export BILLIONMAIL_PASSWORD=your-password
+export BILLIONMAIL_SAFE_PATH=your-safe-path  # if needed
+
+# Start the gateway on port 8808
+supergateway --stdio "billionmail-mcp" --port 8808
+```
+
+Then connect from any MCP client using `mcp-remote`:
+
+```json
+{
+  "mcpServers": {
+    "billionmail": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "http://your-server:8808/sse"]
+    }
+  }
+}
+```
+
+### Option 2: SSH tunnel
+
+Run the server on a remote machine and tunnel stdio over SSH:
+
+```json
+{
+  "mcpServers": {
+    "billionmail": {
+      "command": "ssh",
+      "args": [
+        "user@your-server",
+        "BILLIONMAIL_BASE_URL=https://mail.example.com",
+        "BILLIONMAIL_USER=admin",
+        "BILLIONMAIL_PASSWORD=your-password",
+        "billionmail-mcp"
+      ]
+    }
+  }
+}
+```
+
+This requires `billionmail-mcp-server` to be installed on the remote machine and the env vars to be set (or passed inline as shown above).
+
+> **Tip:** If BillionMail is running on `localhost` on the remote server, set `BILLIONMAIL_BASE_URL=http://localhost:443` (or whatever port) to avoid going through a reverse proxy.
+
 ## Troubleshooting
 
 ### "BillionMail login failed: access denied"
