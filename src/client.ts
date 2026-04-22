@@ -4,20 +4,49 @@ export class BillionMailClient {
   private baseUrl: string;
   private username: string;
   private password: string;
+  private safePath: string | undefined;
   private token: string | null = null;
   private refreshToken: string | null = null;
   private tokenExpiry: number = 0;
+  private sessionCookie: string | null = null;
 
-  constructor(baseUrl: string, username: string, password: string) {
+  constructor(baseUrl: string, username: string, password: string, safePath?: string) {
     this.baseUrl = baseUrl.replace(/\/+$/, "");
     this.username = username;
     this.password = password;
+    this.safePath = safePath;
+  }
+
+  private async ensureSafePath(): Promise<void> {
+    if (!this.safePath || this.sessionCookie) return;
+
+    const res = await fetch(`${this.baseUrl}/${this.safePath}`, {
+      redirect: "manual",
+    });
+
+    const setCookie = res.headers.get("set-cookie");
+    if (setCookie) {
+      const match = setCookie.match(/^([^;]+)/);
+      if (match) {
+        this.sessionCookie = match[1];
+      }
+    }
+  }
+
+  private getHeaders(extra?: Record<string, string>): Record<string, string> {
+    const headers: Record<string, string> = { ...extra };
+    if (this.sessionCookie) {
+      headers["Cookie"] = this.sessionCookie;
+    }
+    return headers;
   }
 
   private async login(): Promise<void> {
+    await this.ensureSafePath();
+
     const res = await fetch(`${this.baseUrl}/api/login`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: this.getHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({
         username: this.username,
         password: this.password,
@@ -41,10 +70,10 @@ export class BillionMailClient {
         try {
           const res = await fetch(`${this.baseUrl}/api/refresh-token`, {
             method: "POST",
-            headers: {
+            headers: this.getHeaders({
               "Content-Type": "application/json",
               Authorization: `Bearer ${this.refreshToken}`,
-            },
+            }),
           });
           const json = (await res.json()) as BillionMailResponse<LoginResponse>;
           if (json.success && json.data?.token) {
@@ -73,7 +102,7 @@ export class BillionMailClient {
       }
     }
     const res = await fetch(url.toString(), {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: this.getHeaders({ Authorization: `Bearer ${token}` }),
     });
     return (await res.json()) as BillionMailResponse<T>;
   }
@@ -82,10 +111,10 @@ export class BillionMailClient {
     const token = await this.ensureAuth();
     const res = await fetch(`${this.baseUrl}/api${path}`, {
       method: "POST",
-      headers: {
+      headers: this.getHeaders({
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
-      },
+      }),
       body: body ? JSON.stringify(body) : undefined,
     });
     return (await res.json()) as BillionMailResponse<T>;
