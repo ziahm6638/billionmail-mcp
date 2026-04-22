@@ -12,19 +12,48 @@ npm install -g billionmail-mcp-server
 
 ## Configuration
 
-Set these environment variables:
+### Environment Variables
+
+The server requires three environment variables to connect to your BillionMail instance:
+
+| Variable | Required | Description |
+|---|---|---|
+| `BILLIONMAIL_BASE_URL` | ✅ | Full URL to your BillionMail instance (e.g. `https://mail.example.com`) |
+| `BILLIONMAIL_USER` | ✅ | Your BillionMail admin username |
+| `BILLIONMAIL_PASSWORD` | ✅ | Your BillionMail admin password |
+| `BILLIONMAIL_SAFE_PATH` | ❌ | If your instance uses a safe path URL for access control (see below) |
+
+#### Finding your credentials
+
+1. **`BILLIONMAIL_BASE_URL`** — This is the URL you use to access BillionMail in your browser. If you access it at `https://mail.mycompany.com`, that's your base URL. Do not include a trailing slash.
+
+2. **`BILLIONMAIL_USER` / `BILLIONMAIL_PASSWORD`** — These are the same credentials you use to log into the BillionMail web UI. They were set during BillionMail installation (via `docker-compose.yml` or the install wizard).
+
+3. **`BILLIONMAIL_SAFE_PATH`** (optional) — BillionMail supports a "safe path" feature that adds a secret URL segment for extra security. If your instance requires you to visit `https://mail.example.com/mysecretpath` before the UI loads, then set `BILLIONMAIL_SAFE_PATH=mysecretpath`. If you access the UI directly at the root URL, you don't need this.
+
+#### Setting the variables
+
+**macOS/Linux** — Add to your shell profile (`~/.zshenv`, `~/.bashrc`, etc.):
 
 ```bash
 export BILLIONMAIL_BASE_URL=https://mail.example.com
 export BILLIONMAIL_USER=admin
 export BILLIONMAIL_PASSWORD=your-password
-# Optional: if your instance uses a safe path URL
+# Only if your instance uses a safe path:
 export BILLIONMAIL_SAFE_PATH=your-safe-path
 ```
 
-## Usage with Claude Desktop
+**Windows** — Set via System Properties → Environment Variables, or in PowerShell:
 
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+```powershell
+[System.Environment]::SetEnvironmentVariable("BILLIONMAIL_BASE_URL", "https://mail.example.com", "User")
+[System.Environment]::SetEnvironmentVariable("BILLIONMAIL_USER", "admin", "User")
+[System.Environment]::SetEnvironmentVariable("BILLIONMAIL_PASSWORD", "your-password", "User")
+```
+
+### Claude Desktop
+
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
 
 ```json
 {
@@ -37,7 +66,21 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 }
 ```
 
-## Usage with Pi
+> **Why `/bin/zsh -l -c`?** This launches a login shell so your environment variables from `~/.zshenv` are loaded. On Linux, use `/bin/bash -l -c` instead. On Windows, you can run `billionmail-mcp` directly if the env vars are set system-wide.
+
+**Windows example:**
+
+```json
+{
+  "mcpServers": {
+    "billionmail": {
+      "command": "billionmail-mcp"
+    }
+  }
+}
+```
+
+### Pi (pi.dev)
 
 Add to `~/.pi/agent/mcp.json`:
 
@@ -52,6 +95,16 @@ Add to `~/.pi/agent/mcp.json`:
   }
 }
 ```
+
+### Other MCP Clients
+
+The server uses stdio transport. Any MCP client can connect by running:
+
+```bash
+billionmail-mcp
+```
+
+The binary reads environment variables on startup, authenticates via JWT, and exposes all tools over the MCP protocol.
 
 ## Tools
 
@@ -190,6 +243,27 @@ Add to `~/.pi/agent/mcp.json`:
 | `list_postfix_queue` | List mail queue |
 | `flush_postfix_queue` | Force send queued mail |
 | `delete_deferred_queue` | Clear stuck mail |
+
+## Troubleshooting
+
+### "BillionMail login failed: access denied"
+
+This usually means the safe path hasn't been set. If your BillionMail instance requires visiting a special URL before the UI loads (e.g. `https://mail.example.com/secretpath`), set:
+
+```bash
+export BILLIONMAIL_SAFE_PATH=secretpath
+```
+
+### "fetch failed" / connection errors
+
+- Check that `BILLIONMAIL_BASE_URL` is reachable from your machine
+- If using a self-signed SSL certificate, set `NODE_TLS_REJECT_UNAUTHORIZED=0` in your environment
+- Make sure the URL includes the protocol (`https://` or `http://`)
+
+### Tools not appearing in Claude/Pi
+
+- Restart Claude Desktop or Pi after changing `mcp.json` / `claude_desktop_config.json`
+- Verify the env vars are set in the shell that launches the MCP server (use `/bin/zsh -l -c` to load your profile)
 
 ## Development
 
